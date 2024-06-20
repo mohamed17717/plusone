@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
+from Users import models
 
 User = get_user_model()
 
@@ -45,3 +46,21 @@ class UserSerializer(serializers.ModelSerializer):
 
             attrs['user'] = user
             return attrs
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Profile
+        fields = '__all__'
+
+    class ProfileUpdate(serializers.ModelSerializer):
+        class Meta:
+            model = models.Profile
+            fields = ['bio', 'picture']
+
+    class ProfileRetrieve(serializers.ModelSerializer):
+        user = UserSerializer(read_only=True)
+
+        class Meta:
+            model = models.Profile
+            fields = '__all__'
