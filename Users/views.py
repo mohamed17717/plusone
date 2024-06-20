@@ -1,8 +1,8 @@
 from django.contrib.auth import login
 
 from rest_framework.permissions import AllowAny
-
 from knox.views import LoginView as KnoxLoginView
+from drf_yasg.utils import swagger_auto_schema
 
 from Users import serializers
 
@@ -12,6 +12,7 @@ class LoginAPI(KnoxLoginView):
     permission_classes = [AllowAny]
     serializer_class = serializers.UserSerializer.Login
 
+    @swagger_auto_schema(request_body=serializers.UserSerializer.Login)
     def post(self, request):
         serializer = self.serializer_class(
             data=request.data, context={'request': request})
@@ -28,6 +29,7 @@ class RegisterAPI(KnoxLoginView):
     authentication_classes = []
     serializer_class = serializers.UserSerializer.Register
 
+    @swagger_auto_schema(request_body=serializers.UserSerializer.Register)
     def post(self, request):
         serializer = self.serializer_class(
             data=request.data, context={'request': request})
