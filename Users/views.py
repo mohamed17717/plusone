@@ -1,10 +1,14 @@
 from django.contrib.auth import login
 
 from rest_framework.permissions import AllowAny
+# from rest_framework.viewsets import ...
+
 from knox.views import LoginView as KnoxLoginView
+
 from drf_yasg.utils import swagger_auto_schema
 
 from Users import serializers
+from utils.drf.viewsets import RetrieveUpdateViewSet
 
 
 class LoginAPI(KnoxLoginView):
@@ -41,18 +45,17 @@ class RegisterAPI(KnoxLoginView):
         return super(RegisterAPI, self).post(request, format=None)
 
 
-# RUViewSet
-# from common.utils.drf.viewsets import RUViewSet
-# class UserProfileAPI(APIView):
-#     def get_serializer_class(self):
-#         serializer_class = serializers.UserSerializer
+class UserProfileAPI(RetrieveUpdateViewSet):
+    serializer_class = serializers.ProfileSerializer
+    
+    def get_serializer_class(self):
+        if self.action == 'update' or self.action == 'partial_update':
+            serializer_class = serializers.ProfileSerializer.ProfileUpdate
+        elif self.action == 'retrieve':
+            serializer_class = serializers.ProfileSerializer.ProfileRetrieve
 
-#         if self.action == 'update':
-#             serializer_class = serializers.UserSerializer.Update
-#         elif self.action == 'retrieve':
-#             pass
+        return serializer_class
 
-#         return serializer_class
+    def get_object(self):
+        return self.request.user.profile
 
-#     def get_object(self):
-#         return self.request.user
