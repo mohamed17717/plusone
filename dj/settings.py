@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'knox',
     'django_filters',
     'corsheaders',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -105,6 +106,8 @@ USE_I18N = True
 USE_TZ = True
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'knox.auth.TokenAuthentication',
         # [Test] Make authentication work for Rest template so debugger toolbar will work
@@ -127,6 +130,12 @@ REST_FRAMEWORK = {
         # 'utils.drf.filters.FullTextSearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ]
     # 'EXCEPTION_HANDLER': 'utils.drf.exceptions.custom_exception_handler',
 }
 
@@ -137,6 +146,20 @@ REST_KNOX = {
     'USER_SERIALIZER': 'knox.serializers.UserSerializer',
     'TOKEN_LIMIT_PER_USER': None,
     'AUTO_REFRESH': False,
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'value': 'Token 6170589c02669d3a2736c1cc2b47fdfd12d770246c253db6b35a34a9f76b87d9'
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+
 }
 
 STATIC_URL = 'static/'
