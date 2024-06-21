@@ -113,16 +113,14 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    @property
-    def is_updated(self):
-        return self.created_at != self.updated_at
-
 
 class Vote(models.Model):
     VoteType = choices.VoteType
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='votes')
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='votes')
 
     type = models.SmallIntegerField(choices=VoteType.choices)
 
