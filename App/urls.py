@@ -12,5 +12,7 @@ router.register(r'posts', views.PostViewSet, basename='post')
 
 
 urlpatterns = [
+    path('tags/', views.TagList.as_view()),
+    path('categories/', views.CategoryList.as_view()),
     path('', include(router.urls)),
 ]

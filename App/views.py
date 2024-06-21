@@ -1,6 +1,7 @@
 from django.db.models import F
 
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 
@@ -80,3 +81,16 @@ class PostViewSet(ModelViewSet):
                 pk=response.data['id']).select_for_update().update(views=F('views') + 1)
 
         return response
+
+
+class TagList(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = serializers.TagSerializer
+    queryset = models.Tag.objects.all()
+
+
+class CategoryList(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = serializers.CategorySerializer
+    queryset = models.Category.objects.all()
+
