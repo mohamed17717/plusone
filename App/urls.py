@@ -9,10 +9,13 @@ app_name = 'app'
 
 router = DefaultRouter()
 router.register(r'posts', views.PostViewSet, basename='post')
+router.register(r'comments', views.CommentViewSet, basename='comment')
 
 
 urlpatterns = [
-    path('tags/', views.TagList.as_view()),
-    path('categories/', views.CategoryList.as_view()),
+    path('tags/', views.TagListAPI.as_view()),
+    path('categories/', views.CategoryListAPI.as_view()),
+    # path('comment/<int:pk>/', views.CommentOwnerAPI.as_view()),
+
     path('', include(router.urls)),
 ]
