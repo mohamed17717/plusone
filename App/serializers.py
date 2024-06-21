@@ -71,6 +71,33 @@ class CommentSerializer(serializers.ModelSerializer):
         model = models.Comment
         fields = '__all__'
 
+    class CommentCreate(serializers.ModelSerializer):
+        class Meta:
+            model = models.Comment
+            fields = '__all__'
+            extra_kwargs = {
+                'user': {'read_only': True},
+                'post': {'read_only': True},
+                'comment': {'read_only': True},
+            }
+
+    class CommentUpdate(serializers.ModelSerializer):
+        class Meta:
+            model = models.Comment
+            fields = ['content']
+
+    class CommentList(serializers.ModelSerializer):
+        author = serializers.SerializerMethodField()
+
+        def get_author(self, obj):
+            from Users.serializers import ProfileSerializer
+            serializer_class = ProfileSerializer.ProfileRetrieve
+            return serializer_class(obj.user.profile).data
+
+        class Meta:
+            model = models.Comment
+            fields = '__all__'
+
 
 class VoteSerializer(serializers.ModelSerializer):
     class Meta:
