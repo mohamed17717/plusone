@@ -4,12 +4,16 @@ from App import models
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    url = serializers.ReadOnlyField(source='get_absolute_url')
+
     class Meta:
         model = models.Category
         fields = '__all__'
 
 
 class TagSerializer(serializers.ModelSerializer):
+    url = serializers.ReadOnlyField(source='get_absolute_url')
+
     class Meta:
         model = models.Tag
         fields = '__all__'
