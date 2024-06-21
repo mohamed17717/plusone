@@ -1,14 +1,13 @@
-import uuid
 import readtime
 import humanize
 from datetime import timedelta
 
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
 from django.shortcuts import resolve_url
 
 from App import choices
+from utils.text import unique_slugify
 
 
 User = get_user_model()
@@ -49,21 +48,10 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         if self.pk is None:
-            self.slug = self.get_unique_slug()
+            self.slug = unique_slugify(Post, self.title)
             self.readtime = self.get_readtime()
 
         return super().save(*args, **kwargs)
-
-    def get_unique_slug(self):
-        slug = slugify(self.title)
-        suffix = str(uuid.uuid4()).split('-')[0]
-        unique_slug = f'{slug}-{suffix}'
-
-        while Post.objects.filter(slug=unique_slug).exists():
-            suffix = uuid.uuid4().hex.split('-')[-1]
-            unique_slug = f'{slug}-{suffix}'
-
-        return unique_slug
 
     def get_readtime(self):
         estimation = readtime.of_markdown(self.content)
@@ -77,20 +65,38 @@ class Post(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=128)
-    slug = models.SlugField(blank=True, null=True)
+    slug = models.SlugField(blank=True, null=True, unique=True, db_index=True)
     posts_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs) -> None:
+        if self.pk is None:
+            self.slug = unique_slugify(Category, self.name)
+
+        return super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return resolve_url('app:post-list') + f'?category={self.slug}'
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=128)
-    slug = models.SlugField(blank=True, null=True)
+    slug = models.SlugField(blank=True, null=True, unique=True, db_index=True)
     posts_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs) -> None:
+        if self.pk is None:
+            self.slug = unique_slugify(Tag, self.name)
+
+        return super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return resolve_url('app:post-list') + f'?tag={self.slug}'
 
 
 class Comment(models.Model):
