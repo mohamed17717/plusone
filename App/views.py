@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotAcceptable, PermissionDenied
 from rest_framework import status
 
-from App import models, serializers
+from App import models, serializers, filters
 
 from utils.drf.viewsets import RetrieveUpdateDeleteViewSet
 
@@ -22,6 +22,10 @@ class PostViewSet(ModelViewSet):
     PUBLIC_ACTIONS = ['list', 'retrieve']
 
     serializer_class = serializers.PostSerializer
+    filterset_class = filters.PostFilter
+    search_fields = models.Post.SEARCH_FIELDS
+    ordering = ['-id']
+    
     lookup_field = 'slug'
     lookup_url_kwarg = 'slug'
 
@@ -112,8 +116,8 @@ class PostViewSet(ModelViewSet):
     def comment_list(self, request, slug):
         post = self.get_object()
 
-        qs = post.comments.all().filter(comment__isnull=True).select_related(
-            'user', 'user__profile')
+        qs = post.comments.filter(comment__isnull=True).select_related(
+            'user', 'user__profile').order_by('-id')
         serializer = serializers.CommentSerializer.CommentList
         page = self.paginate_queryset(qs)
         if page is not None:
@@ -153,6 +157,7 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
     PUBLIC_ACTIONS = ['replies_list', 'reply']
 
     serializer_class = serializers.CommentSerializer
+    ordering = ['-id']
 
     def get_permissions(self):
         permissions = [AllowAny()]
