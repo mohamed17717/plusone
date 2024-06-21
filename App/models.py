@@ -63,7 +63,7 @@ class Post(models.Model):
         if created:
             self.slug = unique_slugify(Post, self.title)
             self.readtime = self.get_readtime()
-        
+
         instance = super().save(*args, **kwargs)
 
         if created:
