@@ -5,6 +5,9 @@ from datetime import timedelta
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.shortcuts import resolve_url
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector
 
 from App import choices
 from utils.text import unique_slugify
@@ -14,6 +17,8 @@ User = get_user_model()
 
 
 class Post(models.Model):
+    SEARCH_FIELDS = ['title', 'content', 'description']
+
     # Relations
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='posts')
@@ -42,16 +47,30 @@ class Post(models.Model):
         'Category', related_name='posts', blank=True)
     tags = models.ManyToManyField('Tag', related_name='posts', blank=True)
 
+    search_vector = SearchVectorField(blank=True, null=True)
+
     # Timing
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            GinIndex(fields=['search_vector'])
+        ]
+
     def save(self, *args, **kwargs) -> None:
-        if self.pk is None:
+        created = self.pk is None
+        if created:
             self.slug = unique_slugify(Post, self.title)
             self.readtime = self.get_readtime()
+        
+        instance = super().save(*args, **kwargs)
 
-        return super().save(*args, **kwargs)
+        if created:
+            # NOTE : postgres restrict search_vector to just update can't be set on create
+            self.search_vector = SearchVector(*self.SEARCH_FIELDS)
+
+        return instance
 
     def get_readtime(self):
         estimation = readtime.of_markdown(self.content)
