@@ -127,7 +127,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
-        # 'utils.drf.filters.FullTextSearchFilter',
+        'utils.drf.filters.FullTextSearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
 
@@ -136,7 +136,6 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
         'rest_framework.parsers.JSONParser',
     ]
-    # 'EXCEPTION_HANDLER': 'utils.drf.exceptions.custom_exception_handler',
 }
 
 REST_KNOX = {
