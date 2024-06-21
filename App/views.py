@@ -109,7 +109,7 @@ class PostViewSet(ModelViewSet):
         post = self.get_object()
 
         qs = post.comments.all().filter(comment__isnull=True).select_related(
-                'user', 'user__profile')
+            'user', 'user__profile')
         serializer = serializers.CommentSerializer.CommentList
         page = self.paginate_queryset(qs)
         if page is not None:
@@ -147,7 +147,6 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
         'retrieve', 'update', 'partial_update', 'destroy',
     ]
     PUBLIC_ACTIONS = ['replies_list', 'reply']
-    
 
     serializer_class = serializers.CommentSerializer
 
@@ -181,7 +180,7 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
     @action(methods=['get'], detail=True, url_path=r'replies/list')
     def replies_list(self, request, *args, **kwargs):
         queryset = self.get_object().replies.all().select_related(
-                'user', 'user__profile')
+            'user', 'user__profile')
 
         page = self.paginate_queryset(queryset)
         if page is not None:
