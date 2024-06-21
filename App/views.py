@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import NotAcceptable
+from rest_framework.exceptions import NotAcceptable, PermissionDenied
 from rest_framework import status
 
 from App import models, serializers
@@ -96,6 +96,10 @@ class PostViewSet(ModelViewSet):
     @action(methods=['post'], detail=True, url_path=r'comment')
     def comment(self, request, slug):
         post = self.get_object()
+        
+        if post.open_comments is False:
+            raise PermissionDenied(
+                detail='Comments are closed for this post.')
 
         serializer = serializers.CommentSerializer.CommentCreate(
             data=request.data)
