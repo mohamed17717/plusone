@@ -119,10 +119,12 @@ class Comment(models.Model):
 
 
 class Vote(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    VoteType = choices.VoteType
 
-    type = models.SmallIntegerField(choices=choices.VoteType.choices)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='votes')
+
+    type = models.SmallIntegerField(choices=VoteType.choices)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
