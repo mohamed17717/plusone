@@ -4,6 +4,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 
 from App import models, serializers
 
@@ -13,6 +15,7 @@ class PostViewSet(ModelViewSet):
         'create', 'update', 'partial_update', 'destroy',
         'owner_list', 'owner_retrieve'
     ]
+    AUTHORIZED_ACTIONS = ['upvote', 'downvote']
     PUBLIC_ACTIONS = ['list', 'retrieve']
 
     serializer_class = serializers.PostSerializer
@@ -21,7 +24,7 @@ class PostViewSet(ModelViewSet):
 
     def get_permissions(self):
         permissions = [AllowAny()]
-        if self.action in self.OWNER_ACTIONS:
+        if self.action in self.OWNER_ACTIONS + self.AUTHORIZED_ACTIONS:
             permissions = [IsAuthenticated()]
 
         return permissions
@@ -50,11 +53,12 @@ class PostViewSet(ModelViewSet):
                 qs = qs.filter(private=False)
 
         if self.action in ['list', 'owner_list']:
-            qs = qs.select_related('user', 'user__profile')
+            qs = qs.select_related(
+                'user', 'user__profile').prefetch_related('votes')
         elif self.action in ['retrieve', 'owner_retrieve']:
             qs = (
                 qs.select_related('user', 'user__profile')
-                  .prefetch_related('tags', 'categories')
+                  .prefetch_related('tags', 'categories', 'votes')
             )
 
         return qs
@@ -71,6 +75,20 @@ class PostViewSet(ModelViewSet):
     def owner_retrieve(self, request, slug):
         # NOTE : Needed because drafted posts are not visible from the normal list
         return super().retrieve(request, slug, is_owner=True)
+
+    @action(methods=['get'], detail=True, url_path=r'upvote')
+    def upvote(self, request, slug):
+        post = self.get_object()
+        models.Vote.objects.update_or_create(
+            user=request.user, post=post, defaults={'type': models.Vote.VoteType.LIKE})
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['get'], detail=True, url_path=r'downvote')
+    def downvote(self, request, slug):
+        post = self.get_object()
+        models.Vote.objects.update_or_create(
+            user=request.user, post=post, defaults={'type': models.Vote.VoteType.DISLIKE})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def retrieve(self, request, is_owner=False, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
@@ -93,4 +111,3 @@ class CategoryList(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = serializers.CategorySerializer
     queryset = models.Category.objects.all()
-
