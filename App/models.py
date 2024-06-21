@@ -1,5 +1,12 @@
+import uuid
+import readtime
+import humanize
+from datetime import timedelta
+
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
+from django.shortcuts import resolve_url
 
 from App import choices
 
@@ -9,7 +16,8 @@ User = get_user_model()
 
 class Post(models.Model):
     # Relations
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='posts')
 
     # Content
     title = models.CharField(max_length=128)
@@ -18,7 +26,7 @@ class Post(models.Model):
 
     # Content Describe
     readtime = models.CharField(max_length=128, blank=True, null=True)
-    slug = models.SlugField(blank=True, null=True)
+    slug = models.SlugField(blank=True, null=True, unique=True, db_index=True)
 
     # statistics
     views = models.IntegerField(default=0)
@@ -38,6 +46,33 @@ class Post(models.Model):
     # Timing
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs) -> None:
+        if self.pk is None:
+            self.slug = self.get_unique_slug()
+            self.readtime = self.get_readtime()
+
+        return super().save(*args, **kwargs)
+
+    def get_unique_slug(self):
+        slug = slugify(self.title)
+        suffix = str(uuid.uuid4()).split('-')[0]
+        unique_slug = f'{slug}-{suffix}'
+
+        while Post.objects.filter(slug=unique_slug).exists():
+            suffix = uuid.uuid4().hex.split('-')[-1]
+            unique_slug = f'{slug}-{suffix}'
+
+        return unique_slug
+
+    def get_readtime(self):
+        estimation = readtime.of_markdown(self.content)
+        delta = timedelta(seconds=estimation.seconds)
+
+        return humanize.naturaldelta(delta)
+
+    def get_absolute_url(self):
+        return resolve_url('app:post-detail', self.slug)
 
 
 class Category(models.Model):
