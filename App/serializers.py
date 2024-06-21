@@ -23,21 +23,21 @@ class TagSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Post
-        fields = '__all__'
+        exclude = ['search_vector']
 
     class PostCreate(serializers.ModelSerializer):
         url = serializers.ReadOnlyField(source='get_absolute_url')
 
         class Meta:
             model = models.Post
-            exclude = ['readtime', 'slug', 'views']
+            exclude = ['readtime', 'slug', 'views', 'search_vector']
             extra_kwargs = {'user': {'read_only': True}}
 
     class PostUpdate(serializers.ModelSerializer):
         class Meta:
             model = models.Post
             exclude = [
-                'user', 'readtime', 'slug', 'views',
+                'user', 'readtime', 'slug', 'views', 'search_vector'
             ]
 
     class PostList(serializers.ModelSerializer):
@@ -55,7 +55,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         class Meta:
             model = models.Post
-            exclude = ['content']
+            exclude = ['content', 'search_vector']
 
     class PostRetrieve(PostList):
         tags = TagSerializer(many=True, read_only=True)
@@ -63,7 +63,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         class Meta:
             model = models.Post
-            fields = '__all__'
+            exclude = ['search_vector']
 
 
 class CommentSerializer(serializers.ModelSerializer):
