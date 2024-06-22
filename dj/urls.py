@@ -12,6 +12,8 @@ from drf_yasg import openapi
 urlpatterns = [
     path('api/', include('App.urls', namespace='app')),
     path('users/', include('Users.urls', namespace='users')),
+    
+    path('admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:
@@ -29,7 +31,6 @@ if settings.DEBUG:
     )
 
     urlpatterns += [
-        path('admin/', admin.site.urls),
 
         path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
         path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
