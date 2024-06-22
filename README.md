@@ -29,7 +29,22 @@ Could add more feature but i want to stuck with the estimation i said, and think
 
 ## Running it locally
 
-Just run
+add this to `.env` file
+
+```
+DEBUG=0
+SECRET_KEY=dee4fd75607d42501de03386b2ce538eda1db5a46a943c094afe1418ab1dc706
+
+DATABASE=postgres
+POSTGRES_HOST=db
+POSTGRES_PASSWORD=postgres
+POSTGRES_USER=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=savvy
+POSTGRES_SSLMODE=1
+```
+
+Then just run docker version
 
 ```sh
 
@@ -37,11 +52,14 @@ docker-compose up -d --build
 
 ```
 
-<!-- then navigate `http://localhost` on port 80 because its running nginx, so make sure this port is not in use -->
+then navigate `http://localhost` on port 80 because its running nginx, so make sure this port is not in use
 
 ## Deployment instructions
 
-**Not deployed yet**
+**Not deployed** because my card is declined by heroku
+sorry for this step
+
+![card decline](./card.png)
 
 ## Why and WhyNot
 
