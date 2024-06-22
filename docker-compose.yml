@@ -31,6 +31,18 @@ services:
       - db:db
     networks:
       - djangonetwork
+  
+  nginx:
+    build: ./nginx
+    volumes:
+      - ./staticfiles:/usr/src/app/staticfiles
+      - ./media:/usr/src/app/media
+    ports:
+      - "80:80"
+    depends_on:
+      - django
+    networks:
+      - djangonetwork
 
 networks:
   default:
