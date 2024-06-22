@@ -3,8 +3,15 @@ from django.contrib import admin
 from App import models
 
 
-admin.site.register(models.Post)
-admin.site.register(models.Category)
-admin.site.register(models.Tag)
-admin.site.register(models.Comment)
-admin.site.register(models.Vote)
+class CustomModelAdmin(admin.ModelAdmin):
+    def __init__(self, model, admin_site):
+        self.list_display = [
+            field.name for field in model._meta.fields if field.name != "id"]
+        super(CustomModelAdmin, self).__init__(model, admin_site)
+
+
+admin.site.register(models.Post, CustomModelAdmin)
+admin.site.register(models.Category, CustomModelAdmin)
+admin.site.register(models.Tag, CustomModelAdmin)
+admin.site.register(models.Comment, CustomModelAdmin)
+admin.site.register(models.Vote, CustomModelAdmin)
