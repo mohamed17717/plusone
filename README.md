@@ -15,7 +15,7 @@ I cared about creating more advanced features than you asked for to make a reall
   - Draft the blog to hide it everywhere
   - Public or only for authorized users
 - Navigation
-  - Full-text search
+  - Full-text search (include / exclude)
   - Filter by tag and category
 - Interaction on Blog
   - UpVote / DownVote the blog
@@ -53,6 +53,16 @@ docker-compose up -d --build
 ```
 
 then navigate `http://localhost` on port 80 because its running nginx, so make sure this port is not in use
+
+#### run tests
+
+
+Not using custom settings file make testing 20x faster 
+
+```
+docker-compose run django python manage.py test --parallel --keepdb --settings=dj.test_settings
+```
+
 
 ## Deployment instructions
 
