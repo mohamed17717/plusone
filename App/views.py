@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import NotAcceptable, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
 from App import models, serializers, filters
@@ -18,14 +18,14 @@ class PostViewSet(ModelViewSet):
         'create', 'update', 'partial_update', 'destroy',
         'owner_list', 'owner_retrieve'
     ]
-    AUTHORIZED_ACTIONS = ['upvote', 'downvote']
-    PUBLIC_ACTIONS = ['list', 'retrieve']
+    AUTHORIZED_ACTIONS = ['upvote', 'downvote', 'comment']
+    PUBLIC_ACTIONS = ['list', 'retrieve', 'comment_list']
 
     serializer_class = serializers.PostSerializer
     filterset_class = filters.PostFilter
     search_fields = models.Post.SEARCH_FIELDS
     ordering = ['-id']
-    
+
     lookup_field = 'slug'
     lookup_url_kwarg = 'slug'
 
@@ -86,21 +86,19 @@ class PostViewSet(ModelViewSet):
     @action(methods=['get'], detail=True, url_path=r'upvote')
     def upvote(self, request, slug):
         post = self.get_object()
-        models.Vote.objects.update_or_create(
-            user=request.user, post=post, defaults={'type': models.Vote.VoteType.LIKE})
+        post.upvote(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['get'], detail=True, url_path=r'downvote')
     def downvote(self, request, slug):
         post = self.get_object()
-        models.Vote.objects.update_or_create(
-            user=request.user, post=post, defaults={'type': models.Vote.VoteType.DISLIKE})
+        post.downvote(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['post'], detail=True, url_path=r'comment')
     def comment(self, request, slug):
         post = self.get_object()
-        
+
         if post.open_comments is False:
             raise PermissionDenied(
                 detail='Comments are closed for this post.')
@@ -132,7 +130,7 @@ class PostViewSet(ModelViewSet):
 
         if is_owner is False:
             # select_for_update to Handle race condition
-            request.user.posts.filter(
+            models.Post.objects.filter(
                 pk=response.data['id']).select_for_update().update(views=F('views') + 1)
 
         return response
@@ -154,14 +152,15 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
     OWNER_ACTIONS = [
         'retrieve', 'update', 'partial_update', 'destroy',
     ]
-    PUBLIC_ACTIONS = ['replies_list', 'reply']
+    AUTHORIZED_ACTIONS = ['reply']
+    PUBLIC_ACTIONS = ['replies_list']
 
     serializer_class = serializers.CommentSerializer
     ordering = ['-id']
 
     def get_permissions(self):
         permissions = [AllowAny()]
-        if self.action in self.OWNER_ACTIONS:
+        if self.action in self.OWNER_ACTIONS + self.AUTHORIZED_ACTIONS:
             permissions = [IsAuthenticated()]
 
         return permissions
@@ -171,19 +170,17 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
 
         if self.action in self.OWNER_ACTIONS:
             serializer_class = serializers.CommentSerializer.CommentUpdate
+        elif self.action in 'reply':
+            serializer_class = serializers.CommentSerializer.CommentCreate
         elif self.action == 'replies_list':
             serializer_class = serializers.CommentSerializer.CommentList
 
         return serializer_class
 
     def get_queryset(self):
+        qs = models.Comment.objects.all()
         if self.action in self.OWNER_ACTIONS:
             qs = self.request.user.comments.all()
-
-        elif self.action in self.PUBLIC_ACTIONS:
-            qs = models.Comment.objects.all()
-        else:
-            raise NotAcceptable('Comment not support this action')
         return qs
 
     @action(methods=['get'], detail=True, url_path=r'replies/list')
@@ -203,9 +200,9 @@ class CommentViewSet(RetrieveUpdateDeleteViewSet):
     def reply(self, request, pk):
         comment = self.get_object()
 
-        serializer = serializers.CommentSerializer.CommentCreate(
-            data=request.data)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user, post=comment.post, comment=comment)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
