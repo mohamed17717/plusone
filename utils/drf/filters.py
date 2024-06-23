@@ -1,7 +1,6 @@
 from django.contrib.postgres.search import SearchQuery, SearchVector
 
-from rest_framework.filters import SearchFilter, search_smart_split
-from rest_framework.fields import CharField
+from rest_framework.filters import SearchFilter
 
 
 class FullTextSearchFilter(SearchFilter):
@@ -12,37 +11,35 @@ class FullTextSearchFilter(SearchFilter):
             fields = [f.strip(prefixes) for f in fields]
         return fields
 
-    def get_raw_search_terms(self, request, search_param):
+    def _to_fts_raw(self, query):
         # Allow mutiple search query using `,` like you search for 'python django'
         # This will return blogs about 'python' and 'django' but if you write it like
         # 'python, django' this will return all python blogs and all django blogs
         # thanks for `to_raw` function that convert search query to raw query valid for FTS
 
-        value = request.query_params.get(search_param, '')
+        query = query.strip().replace(',', '|')
+        
+        if not query:
+            return
+        
+        def quote(i): return f"'{i.strip()}'"
+        def parentheses(i): return f"({i.strip()})"
+        def or_join(i): return ' | '.join(i)
+        def and_join(i): return ' & '.join(i)
+        def is_multiple(i): return ' ' in i
+        def multiple_query(i): return parentheses(
+            and_join(map(quote, i.split(' '))))
+        
+        return or_join([
+            multiple_query(i) if is_multiple(i) else quote(i)
+            for i in query.split('|')
+        ])
 
-        field = CharField(trim_whitespace=False, allow_blank=True)
-        cleaned_value = field.run_validation(value)
-        cleaned_value = cleaned_value.replace(',', '|')
-        query = search_smart_split(cleaned_value)
-
-        def to_raw(q):
-            def quote(i): return f"'{i.strip()}'"
-            def parentheses(i): return f"({i.strip()})"
-            def or_join(i): return ' | '.join(i)
-            def and_join(i): return ' & '.join(i)
-            def is_multiple(i): return ' ' in i
-            def multiple_query(i): return parentheses(
-                and_join(map(quote, i.split(' '))))
-
-            q = ' '.join(query)
-            q = q.split('|')
-            q = or_join([
-                multiple_query(i) if is_multiple(i) else quote(i) for i in q
-            ])
-            return q
+    def get_raw_search_terms(self, request, search_param):
+        query = request.query_params.get(search_param, '')
+        query = self._to_fts_raw(query)
 
         if query:
-            query = to_raw(query)
             return SearchQuery(query, search_type='raw')
 
     def _filter_by_exclude(self, request, queryset):
