@@ -1,4 +1,3 @@
-from django.db.models import Sum
 from rest_framework import serializers
 
 from App import models
@@ -43,15 +42,12 @@ class PostSerializer(serializers.ModelSerializer):
     class PostList(serializers.ModelSerializer):
         author = serializers.SerializerMethodField()
         url = serializers.ReadOnlyField(source='get_absolute_url')
-        votes = serializers.SerializerMethodField()
+        votes = serializers.ReadOnlyField(source='votes_count')
 
         def get_author(self, obj):
             from Users.serializers import ProfileSerializer
             serializer_class = ProfileSerializer.ProfileRetrieve
             return serializer_class(obj.user.profile).data
-
-        def get_votes(self, obj):
-            return obj.votes.aggregate(total_votes=Sum('type'))['total_votes']
 
         class Meta:
             model = models.Post
