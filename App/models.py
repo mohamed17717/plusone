@@ -69,6 +69,7 @@ class Post(models.Model):
         if created:
             # NOTE : postgres restrict search_vector to just update can't be set on create
             self.search_vector = SearchVector(*self.SEARCH_FIELDS)
+            self.save()
 
         return instance
 
@@ -80,6 +81,24 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return resolve_url('app:post-detail', self.slug)
+
+    def upvote(self, user):
+        Vote.objects.update_or_create(
+            user=user, post=self,
+            defaults={'type': Vote.VoteType.LIKE}
+        )
+        return True
+
+    def downvote(self, user):
+        Vote.objects.update_or_create(
+            user=user, post=self,
+            defaults={'type': Vote.VoteType.DISLIKE}
+        )
+        return True
+
+    @property
+    def votes_count(self):
+        return self.votes.aggregate(total_votes=models.Sum('type'))['total_votes']
 
 
 class Category(models.Model):
