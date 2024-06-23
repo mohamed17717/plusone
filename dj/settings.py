@@ -77,34 +77,20 @@ WSGI_APPLICATION = 'dj.wsgi.application'
 
 AUTH_USER_MODEL = 'Users.User'
 
-
-if os.getenv('GITHUB_WORKFLOW'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'github-actions',
-            'USER': 'postgres',
-            'PASSWORD': 'postgres',
-            'HOST': 'db',
-            'PORT': '5432'
-        }
+DATABASES = {
+    'default': {
+        # [Scalability] Db pool accept too many connections
+        # better than normal 'django.db.backends.postgresql'
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv("POSTGRES_DB"),
+        'USER': os.getenv("POSTGRES_USER"),
+        'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
+        'HOST': os.getenv("POSTGRES_HOST"),
+        'PORT': os.getenv("POSTGRES_PORT", '5432'),
+        'CONN_MAX_AGE': 600,
+        'ATOMIC_REQUESTS': True,
     }
-
-else:
-    DATABASES = {
-        'default': {
-            # [Scalability] Db pool accept too many connections
-            # better than normal 'django.db.backends.postgresql'
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.getenv("POSTGRES_DB"),
-            'USER': os.getenv("POSTGRES_USER"),
-            'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
-            'HOST': os.getenv("POSTGRES_HOST"),
-            'PORT': os.getenv("POSTGRES_PORT", '5432'),
-            'CONN_MAX_AGE': 600,
-            'ATOMIC_REQUESTS': True,
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
