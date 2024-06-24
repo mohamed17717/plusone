@@ -7,7 +7,7 @@ Really cared about creating high quality code that easy to maintain, and i can m
 
 ## Feature
 
-I cared about creating more advanced features than you asked for to make a really usuful product not just assignment want it to finish.
+I cared about creating more advanced features than you asked for to make a real usuful product not just assignment want it to finish.
 
 - Blog basic crud operation
 - Flags give author more control
@@ -57,7 +57,7 @@ then navigate `http://localhost` on port 80 because its running nginx, so make s
 #### run tests
 
 
-Not using custom settings file make testing 20x faster 
+Using custom settings file make testing 20x faster 
 
 ```
 docker-compose run django python manage.py test --parallel --keepdb --settings=dj.test_settings
